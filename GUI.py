@@ -1,5 +1,9 @@
 import logging
+import time
+
 import coloredlogs
+
+from sapphire_controller import LaserController
 
 log_level = logging.DEBUG
 logging.basicConfig(level=log_level)
@@ -16,3 +20,7 @@ coloredlogs.install(
     fmt='%(asctime)s - %(levelname)s - %(message)s',
     field_styles=field_styles)
 
+laser = LaserController("COM6")
+
+
+laser.close_connection()

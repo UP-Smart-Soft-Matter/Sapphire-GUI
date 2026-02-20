@@ -1,3 +1,5 @@
+import time
+
 import serial
 import logging
 
@@ -74,7 +76,8 @@ class LaserController:
                      f"\t\t\tbytesize={self.__ser.bytesize}\n"
                      f"\t\t\ttimeout={self.__ser.timeout}")
 
-        self.send_command(">=0")
+        self.send_command("E=0")
+        self.send_command(">=1")
         self.send_command("L=0")
 
     def connection_check(self):
@@ -129,6 +132,8 @@ class LaserController:
         Always close the connection when finished with the laser to prevent communication issues or resource leaks.
         """
         self.send_command("L=0")
+        self.send_command(">=1")
+        self.send_command("E=1")
         self.__ser.flush()
         self.__ser.close()
         del self
@@ -171,8 +176,8 @@ class LaserController:
         full_command = f"{command}\r"
         self.__ser.write(full_command.encode())
 
-        response = self.__ser.read_until(b'\r\n').decode()
-        if "\x00" in response:
+        response = self.__ser.read_until(b'Sapphire').decode()
+        if "Bad Command" in response:
             logger.error(f"Laser: Command {repr({full_command})} is unknown")
             raise SerialError("Command unknown")
         elif response == "":
@@ -181,4 +186,4 @@ class LaserController:
         else:
             logger.info(f"Laser: Command sent: {repr(full_command)}")
             logger.debug(f"Laser: Command sent: {repr(full_command)}, response: {repr(response)}")
-            return response
+            return response.replace("Sapphire", "").replace(":0-> ", "").replace(":*->", "").strip()
